@@ -16,10 +16,18 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.gorguludg.checkers.game.model.Player
+import androidx.compose.foundation.clickable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 
 @Composable
 fun BoardComposable(
-    board: Board
+    board: Board,
+    currentPlayer: Player,
+    onSquareSelected: (Position) -> Unit,
+    selectedPosition: Position?
 ) {
     Column(
         modifier = Modifier
@@ -41,11 +49,16 @@ fun BoardComposable(
                             .weight(1f)
                             .aspectRatio(1f)
                             .background(
-                                if (isDarkSquare)
+                                if (selectedPosition?.row == row && selectedPosition.col == col)
+                                    Color.Yellow
+                                else if (isDarkSquare)
                                     Color(0xFF769656)
                                 else
                                     Color(0xFFEEEED2)
                             )
+                            .clickable {
+                                onSquareSelected(Position(row, col))
+                            }
                     ) {
                         val piece = board.getPiece(Position(row, col))
 
