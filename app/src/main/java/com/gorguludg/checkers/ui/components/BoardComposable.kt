@@ -21,6 +21,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.Alignment
 
 @Composable
 fun BoardComposable(
@@ -63,19 +65,30 @@ fun BoardComposable(
                         val piece = board.getPiece(Position(row, col))
 
                         if (piece != null) {
+
+                            val pieceColor =
+                                if (piece.player == Player.WHITE) Color.White
+                                else Color.Black
+
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .aspectRatio(1f)
                                     .padding(8.dp)
                                     .clip(CircleShape)
-                                    .background(
-                                        if (piece.player == Player.WHITE)
-                                            Color.White
-                                        else
-                                            Color.Black
+                                    .background(pieceColor),
+                                contentAlignment = Alignment.Center
+                            ) {
+
+                                if (piece.isKing) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(20.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFFFFD700)) // gold
                                     )
-                            )
+                                }
+                            }
                         }
                     }
                 }
