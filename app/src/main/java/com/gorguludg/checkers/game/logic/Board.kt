@@ -306,4 +306,18 @@ class Board {
         }
         return false
     }
+
+    fun deepCopy(): Board {
+        val newBoard = Board()
+
+        for (row in 0..7) {
+            for (col in 0..7) {
+                val piece = this.grid[row][col]
+                newBoard.grid[row][col] = piece?.copy()
+            }
+        }
+
+        return newBoard
+    }
+
 }
