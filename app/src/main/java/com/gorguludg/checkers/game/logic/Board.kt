@@ -184,4 +184,71 @@ class Board {
 
         return false
     }
+
+    fun hasAnyValidMove(player: Player): Boolean {
+
+        for (row in 0..7) {
+            for (col in 0..7) {
+
+                val piece = grid[row][col] ?: continue
+                if (piece.player != player) continue
+
+                val from = Position(row, col)
+
+                // Try all possible destinations
+                for (r in -2..2) {
+                    for (c in -2..2) {
+
+                        val to = Position(row + r, col + c)
+                        if (!to.isValid()) continue
+
+                        val result = movePiecePreview(from, to, player)
+                        if (result != MoveResult.INVALID) {
+                            return true
+                        }
+                    }
+                }
+            }
+        }
+
+        return false
+    }
+
+    private fun movePiecePreview(
+        from: Position,
+        to: Position,
+        player: Player
+    ): MoveResult {
+
+        val backupFrom = getPiece(from)
+        val backupTo = getPiece(to)
+
+        val middleBackup =
+            if (kotlin.math.abs(to.row - from.row) == 2)
+                getPiece(Position((from.row + to.row) / 2, (from.col + to.col) / 2))
+            else null
+
+        val result = movePiece(from, to, player)
+
+        // Undo move
+        setPiece(from, backupFrom)
+        setPiece(to, backupTo)
+
+        if (middleBackup != null) {
+            val middle = Position((from.row + to.row) / 2, (from.col + to.col) / 2)
+            setPiece(middle, middleBackup)
+        }
+
+        return result
+    }
+
+    fun hasAnyPieces(player: Player): Boolean {
+        for (row in 0..7) {
+            for (col in 0..7) {
+                val piece = grid[row][col]
+                if (piece?.player == player) return true
+            }
+        }
+        return false
+    }
 }

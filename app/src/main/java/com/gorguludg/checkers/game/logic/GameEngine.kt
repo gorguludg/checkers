@@ -18,6 +18,8 @@ class GameEngine {
 
     fun onSquareClicked(position: Position) {
 
+        if (winner != null) return
+
         if (selectedPosition == null) {
 
             val piece = board.getPiece(position)
@@ -41,7 +43,15 @@ class GameEngine {
                 }
 
                 Board.MoveResult.NORMAL -> {
-                    currentPlayer = currentPlayer.opponent()
+                    val nextPlayer = currentPlayer.opponent()
+
+                    if (!board.hasAnyPieces(nextPlayer) ||
+                        !board.hasAnyValidMove(nextPlayer)
+                    ) {
+                        winner = currentPlayer
+                    } else {
+                        currentPlayer = nextPlayer
+                    }
                     selectedPosition = null
                 }
 
@@ -52,11 +62,22 @@ class GameEngine {
                     if (board.canCaptureFrom(newPosition)) {
                         selectedPosition = newPosition
                     } else {
-                        currentPlayer = currentPlayer.opponent()
+                        val nextPlayer = currentPlayer.opponent()
+
+                        if (!board.hasAnyPieces(nextPlayer) ||
+                            !board.hasAnyValidMove(nextPlayer)
+                        ) {
+                            winner = currentPlayer
+                        } else {
+                            currentPlayer = nextPlayer
+                        }
                         selectedPosition = null
                     }
                 }
             }
         }
     }
+
+    var winner by mutableStateOf<Player?>(null)
+        private set
 }

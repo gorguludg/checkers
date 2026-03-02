@@ -8,6 +8,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.gorguludg.checkers.game.logic.GameEngine
 import com.gorguludg.checkers.ui.components.BoardComposable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.Text
+import androidx.compose.ui.unit.dp
 
 @Composable
 fun GameScreen() {
@@ -18,13 +23,25 @@ fun GameScreen() {
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        BoardComposable(
-            board = engine.board,
-            currentPlayer = engine.currentPlayer,
-            selectedPosition = engine.selectedPosition,
-            onSquareSelected = { position ->
-                engine.onSquareClicked(position)
+
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+            if (engine.winner != null) {
+                Text(text = "Winner: ${engine.winner}")
+                Spacer(modifier = Modifier.height(16.dp))
+            } else {
+                Text(text = "Turn: ${engine.currentPlayer}")
+                Spacer(modifier = Modifier.height(16.dp))
             }
-        )
+
+            BoardComposable(
+                board = engine.board,
+                currentPlayer = engine.currentPlayer,
+                selectedPosition = engine.selectedPosition,
+                onSquareSelected = { position ->
+                    engine.onSquareClicked(position)
+                }
+            )
+        }
     }
 }
