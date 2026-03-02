@@ -28,8 +28,9 @@ import androidx.compose.ui.Alignment
 fun BoardComposable(
     board: Board,
     currentPlayer: Player,
-    onSquareSelected: (Position) -> Unit,
-    selectedPosition: Position?
+    selectedPosition: Position?,
+    legalMoves: List<Position>,
+    onSquareSelected: (Position) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -51,12 +52,16 @@ fun BoardComposable(
                             .weight(1f)
                             .aspectRatio(1f)
                             .background(
-                                if (selectedPosition?.row == row && selectedPosition.col == col)
-                                    Color.Yellow
-                                else if (isDarkSquare)
-                                    Color(0xFF769656)
-                                else
-                                    Color(0xFFEEEED2)
+                                when {
+                                    selectedPosition?.row == row &&
+                                            selectedPosition.col == col -> Color.Yellow
+
+                                    legalMoves.any { it.row == row && it.col == col } ->
+                                        Color(0xFFBACA44)
+
+                                    isDarkSquare -> Color(0xFF769656)
+                                    else -> Color(0xFFEEEED2)
+                                }
                             )
                             .clickable {
                                 onSquareSelected(Position(row, col))

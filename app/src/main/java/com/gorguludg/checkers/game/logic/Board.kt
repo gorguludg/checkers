@@ -185,6 +185,61 @@ class Board {
         return false
     }
 
+    fun getLegalMoves(from: Position, player: Player): List<Position> {
+
+        val moves = mutableListOf<Position>()
+
+        val piece = getPiece(from) ?: return emptyList()
+        if (piece.player != player) return emptyList()
+
+        val captureRequired = hasCaptureForPlayer(player)
+
+        val directions = listOf(
+            Pair(1, 1),
+            Pair(1, -1),
+            Pair(-1, 1),
+            Pair(-1, -1)
+        )
+
+        for ((rowDir, colDir) in directions) {
+
+            // NORMAL MOVE
+            val normal = Position(from.row + rowDir, from.col + colDir)
+
+            if (!captureRequired) {
+                if (normal.isValid() &&
+                    getPiece(normal) == null &&
+                    (piece.isKing ||
+                            (piece.player == Player.WHITE && rowDir == -1) ||
+                            (piece.player == Player.BLACK && rowDir == 1))
+                ) {
+                    moves.add(normal)
+                }
+            }
+
+            // CAPTURE MOVE
+            val capture = Position(from.row + rowDir * 2, from.col + colDir * 2)
+            val middle = Position(from.row + rowDir, from.col + colDir)
+
+            if (capture.isValid() &&
+                getPiece(capture) == null
+            ) {
+                val middlePiece = getPiece(middle)
+
+                if (middlePiece != null &&
+                    middlePiece.player != piece.player &&
+                    (piece.isKing ||
+                            (piece.player == Player.WHITE && rowDir == -1) ||
+                            (piece.player == Player.BLACK && rowDir == 1))
+                ) {
+                    moves.add(capture)
+                }
+            }
+        }
+
+        return moves
+    }
+
     fun hasAnyValidMove(player: Player): Boolean {
 
         for (row in 0..7) {

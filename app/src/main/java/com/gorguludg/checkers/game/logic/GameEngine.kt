@@ -17,6 +17,9 @@ class GameEngine {
     var selectedPosition by mutableStateOf<Position?>(null)
         private set
 
+    var legalMoves by mutableStateOf<List<Position>>(emptyList())
+        private set
+
     fun onSquareClicked(position: Position) {
 
         if (winner != null) return
@@ -27,6 +30,7 @@ class GameEngine {
 
             if (piece != null && piece.player == currentPlayer) {
                 selectedPosition = position
+                legalMoves = board.getLegalMoves(position, currentPlayer)
             }
 
         } else {
@@ -41,6 +45,7 @@ class GameEngine {
 
                 Board.MoveResult.INVALID -> {
                     selectedPosition = null
+                    legalMoves = emptyList()
                 }
 
                 Board.MoveResult.NORMAL -> {
@@ -54,6 +59,7 @@ class GameEngine {
                         currentPlayer = nextPlayer
                     }
                     selectedPosition = null
+                    legalMoves = emptyList()
                 }
 
                 Board.MoveResult.CAPTURE -> {
@@ -73,6 +79,7 @@ class GameEngine {
                             currentPlayer = nextPlayer
                         }
                         selectedPosition = null
+                        legalMoves = emptyList()
                     }
                 }
             }

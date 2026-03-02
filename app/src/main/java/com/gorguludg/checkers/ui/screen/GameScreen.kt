@@ -45,6 +45,7 @@ fun GameScreen() {
                 board = engine.board,
                 currentPlayer = engine.currentPlayer,
                 selectedPosition = engine.selectedPosition,
+                legalMoves = engine.legalMoves,
                 onSquareSelected = { position ->
                     engine.onSquareClicked(position)
                 }
