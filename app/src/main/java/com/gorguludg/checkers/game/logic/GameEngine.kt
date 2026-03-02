@@ -9,6 +9,11 @@ import com.gorguludg.checkers.game.model.Position
 
 class GameEngine {
 
+    enum class GameMode {
+        PVP,
+        PVAI
+    }
+
     data class GameSnapshot(
         val board: Board,
         val currentPlayer: Player,
@@ -29,6 +34,10 @@ class GameEngine {
 
     var winner by mutableStateOf<Player?>(null)
         private set
+
+    var gameMode by mutableStateOf(GameMode.PVP)
+
+    var humanPlayer by mutableStateOf(Player.WHITE)
 
     private val history = mutableListOf<GameSnapshot>()
 
@@ -124,9 +133,126 @@ class GameEngine {
             !board.hasAnyValidMove(nextPlayer)
         ) {
             winner = currentPlayer
-        } else {
-            currentPlayer = nextPlayer
+            return
         }
+
+        currentPlayer = nextPlayer
+
+        // Trigger AI if needed
+        if (gameMode == GameMode.PVAI &&
+            currentPlayer != humanPlayer &&
+            winner == null
+        ) {
+            performAIMove()
+        }
+    }
+
+    private fun performAIMove() {
+
+        val bestMove = findBestMove(currentPlayer) ?: return
+
+        val boardBeforeMove = board.deepCopy()
+
+        val result = board.movePiece(
+            bestMove.first,
+            bestMove.second,
+            currentPlayer
+        )
+
+        if (result == Board.MoveResult.NORMAL) {
+
+            history.add(
+                GameSnapshot(
+                    board = boardBeforeMove,
+                    currentPlayer = currentPlayer,
+                    winner = winner
+                )
+            )
+
+            switchTurn()
+
+        } else if (result == Board.MoveResult.CAPTURE) {
+
+            val newPosition = bestMove.second
+
+            if (board.canCaptureFrom(newPosition)) {
+                // For simplicity, AI does not chain multi-capture yet
+                switchTurn()
+            } else {
+
+                history.add(
+                    GameSnapshot(
+                        board = boardBeforeMove,
+                        currentPlayer = currentPlayer,
+                        winner = winner
+                    )
+                )
+
+                switchTurn()
+            }
+        }
+    }
+
+    private fun findBestMove(player: Player): Pair<Position, Position>? {
+
+        val moves = mutableListOf<Pair<Position, Position>>()
+
+        for (row in 0..7) {
+            for (col in 0..7) {
+
+                val from = Position(row, col)
+                val piece = board.getPiece(from) ?: continue
+                if (piece.player != player) continue
+
+                val legal = board.getLegalMoves(from, player)
+
+                for (to in legal) {
+                    moves.add(from to to)
+                }
+            }
+        }
+
+        if (moves.isEmpty()) return null
+
+        var bestScore = Int.MIN_VALUE
+        var bestMove: Pair<Position, Position>? = null
+
+        for ((from, to) in moves) {
+
+            val copy = board.deepCopy()
+            copy.movePiece(from, to, player)
+
+            val score = evaluateBoard(copy, player)
+
+            if (score > bestScore) {
+                bestScore = score
+                bestMove = from to to
+            }
+        }
+
+        return bestMove
+    }
+
+    private fun evaluateBoard(board: Board, player: Player): Int {
+
+        var score = 0
+
+        for (row in 0..7) {
+            for (col in 0..7) {
+
+                val piece = board.getPiece(Position(row, col)) ?: continue
+
+                val value = if (piece.isKing) 3 else 1
+
+                if (piece.player == player) {
+                    score += value
+                } else {
+                    score -= value
+                }
+            }
+        }
+
+        return score
     }
 
     @SuppressLint("NewApi")
@@ -134,11 +260,27 @@ class GameEngine {
 
         if (history.isEmpty()) return
 
-        val snapshot = history.removeLast()
+        if (gameMode == GameMode.PVAI) {
 
-        board = snapshot.board
-        currentPlayer = snapshot.currentPlayer
-        winner = snapshot.winner
+            // Remove AI move
+            history.removeLastOrNull()
+
+            // Remove human move
+            if (history.isNotEmpty()) {
+                val snapshot = history.removeLast()
+                board = snapshot.board
+                currentPlayer = snapshot.currentPlayer
+                winner = snapshot.winner
+            }
+
+        } else {
+
+            val snapshot = history.removeLast()
+
+            board = snapshot.board
+            currentPlayer = snapshot.currentPlayer
+            winner = snapshot.winner
+        }
 
         selectedPosition = null
         legalMoves = emptyList()
@@ -151,5 +293,12 @@ class GameEngine {
         legalMoves = emptyList()
         winner = null
         history.clear()
+
+        // If PvAI and human is BLACK, AI (WHITE) moves first
+        if (gameMode == GameMode.PVAI &&
+            humanPlayer == Player.BLACK
+        ) {
+            performAIMove()
+        }
     }
 }
