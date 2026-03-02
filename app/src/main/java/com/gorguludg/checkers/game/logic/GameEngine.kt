@@ -28,17 +28,35 @@ class GameEngine {
 
         } else {
 
-            val moved = board.movePiece(
+            val result = board.movePiece(
                 from = selectedPosition!!,
                 to = position,
                 currentPlayer = currentPlayer
             )
 
-            if (moved) {
-                currentPlayer = currentPlayer.opponent()
-            }
+            when (result) {
 
-            selectedPosition = null
+                Board.MoveResult.INVALID -> {
+                    selectedPosition = null
+                }
+
+                Board.MoveResult.NORMAL -> {
+                    currentPlayer = currentPlayer.opponent()
+                    selectedPosition = null
+                }
+
+                Board.MoveResult.CAPTURE -> {
+
+                    val newPosition = position
+
+                    if (board.canCaptureFrom(newPosition)) {
+                        selectedPosition = newPosition
+                    } else {
+                        currentPlayer = currentPlayer.opponent()
+                        selectedPosition = null
+                    }
+                }
+            }
         }
     }
 }

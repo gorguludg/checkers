@@ -6,6 +6,12 @@ import com.gorguludg.checkers.game.model.Position
 
 class Board {
 
+    enum class MoveResult {
+        INVALID,
+        NORMAL,
+        CAPTURE
+    }
+
     private val grid: Array<Array<Piece?>> =
         Array(8) { Array<Piece?>(8) { null } }
 
@@ -16,17 +22,10 @@ class Board {
     private fun setupInitialPosition() {
         for (row in 0..7) {
             for (col in 0..7) {
-
-                // Only dark squares are used in checkers
                 if ((row + col) % 2 != 0) {
-
                     when (row) {
-                        in 0..2 -> {
-                            grid[row][col] = Piece(Player.BLACK)
-                        }
-                        in 5..7 -> {
-                            grid[row][col] = Piece(Player.WHITE)
-                        }
+                        in 0..2 -> grid[row][col] = Piece(Player.BLACK)
+                        in 5..7 -> grid[row][col] = Piece(Player.WHITE)
                     }
                 }
             }
@@ -47,15 +46,15 @@ class Board {
         from: Position,
         to: Position,
         currentPlayer: Player
-    ): Boolean {
+    ): MoveResult {
 
-        if (!from.isValid() || !to.isValid()) return false
+        if (!from.isValid() || !to.isValid()) return MoveResult.INVALID
 
-        val piece = getPiece(from) ?: return false
+        val piece = getPiece(from) ?: return MoveResult.INVALID
 
-        if (piece.player != currentPlayer) return false
+        if (piece.player != currentPlayer) return MoveResult.INVALID
 
-        if (getPiece(to) != null) return false
+        if (getPiece(to) != null) return MoveResult.INVALID
 
         val rowDiff = to.row - from.row
         val colDiff = to.col - from.col
@@ -63,25 +62,22 @@ class Board {
         val absRow = kotlin.math.abs(rowDiff)
         val absCol = kotlin.math.abs(colDiff)
 
-        // Must move diagonally
-        if (absCol != absRow) return false
+        if (absCol != absRow) return MoveResult.INVALID
 
-        // Forced capture rule
         if (hasCaptureForPlayer(currentPlayer) && absRow == 1) {
-            return false
+            return MoveResult.INVALID
         }
 
-        // NORMAL MOVE (1 step)
+        // NORMAL MOVE
         if (absRow == 1) {
 
             if (!piece.isKing) {
                 when (piece.player) {
-                    Player.WHITE -> if (rowDiff != -1) return false
-                    Player.BLACK -> if (rowDiff != 1) return false
+                    Player.WHITE -> if (rowDiff != -1) return MoveResult.INVALID
+                    Player.BLACK -> if (rowDiff != 1) return MoveResult.INVALID
                 }
             }
 
-            // Promotion check
             val promotedPiece =
                 if (!piece.isKing &&
                     ((piece.player == Player.WHITE && to.row == 0) ||
@@ -95,30 +91,28 @@ class Board {
             setPiece(to, promotedPiece)
             setPiece(from, null)
 
-            return true
+            return MoveResult.NORMAL
         }
 
-        // CAPTURE MOVE (2 steps)
+        // CAPTURE MOVE
         if (absRow == 2) {
 
             val middleRow = from.row + rowDiff / 2
             val middleCol = from.col + colDiff / 2
             val middlePiece = grid[middleRow][middleCol]
 
-            if (middlePiece == null) return false
-            if (middlePiece.player == piece.player) return false
+            if (middlePiece == null) return MoveResult.INVALID
+            if (middlePiece.player == piece.player) return MoveResult.INVALID
 
             if (!piece.isKing) {
                 when (piece.player) {
-                    Player.WHITE -> if (rowDiff != -2) return false
-                    Player.BLACK -> if (rowDiff != 2) return false
+                    Player.WHITE -> if (rowDiff != -2) return MoveResult.INVALID
+                    Player.BLACK -> if (rowDiff != 2) return MoveResult.INVALID
                 }
             }
 
-            // Remove captured piece
             grid[middleRow][middleCol] = null
 
-            // Promotion check
             val promotedPiece =
                 if (!piece.isKing &&
                     ((piece.player == Player.WHITE && to.row == 0) ||
@@ -132,16 +126,10 @@ class Board {
             setPiece(to, promotedPiece)
             setPiece(from, null)
 
-            return true
+            return MoveResult.CAPTURE
         }
 
-        return false
-
-        // Perform move
-        setPiece(to, piece)
-        setPiece(from, null)
-
-        return true
+        return MoveResult.INVALID
     }
 
     fun getGrid(): Array<Array<Piece?>> {
@@ -162,7 +150,7 @@ class Board {
         return false
     }
 
-    private fun canCaptureFrom(position: Position): Boolean {
+    fun canCaptureFrom(position: Position): Boolean {
 
         val piece = getPiece(position) ?: return false
 
