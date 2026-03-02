@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Text
 import androidx.compose.ui.unit.dp
+import androidx.compose.material3.Button
 
 @Composable
 fun GameScreen() {
@@ -28,6 +29,12 @@ fun GameScreen() {
 
             if (engine.winner != null) {
                 Text(text = "Winner: ${engine.winner}")
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(onClick = { engine.resetGame() }) {
+                    Text("Restart Game")
+                }
+
                 Spacer(modifier = Modifier.height(16.dp))
             } else {
                 Text(text = "Turn: ${engine.currentPlayer}")

@@ -8,7 +8,8 @@ import com.gorguludg.checkers.game.model.Position
 
 class GameEngine {
 
-    val board = Board()
+    var board by mutableStateOf(Board())
+        private set
 
     var currentPlayer by mutableStateOf(Player.WHITE)
         private set
@@ -80,4 +81,12 @@ class GameEngine {
 
     var winner by mutableStateOf<Player?>(null)
         private set
+
+    fun resetGame() {
+        board = Board()
+        currentPlayer = Player.WHITE
+        selectedPosition = null
+        winner = null
+    }
+
 }
